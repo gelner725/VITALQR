@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>VitalQR - Prototipo Web</title>
+  <style>
+    :root{--accent:#1f3a5f;--accent-2:#3fa9a4;--bg:#f5f7fb;--ink:#0f172a;--muted:#5b6b82;}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:#111}
+    header{background:linear-gradient(135deg,#1f3a5f,#3fa9a4);color:#fff;padding:14px 18px;position:sticky;top:0;z-index:5;box-shadow:0 10px 22px rgba(0,0,0,.15)}
+    .container{max-width:1100px;margin:18px auto;padding:18px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(15,23,42,0.08)}
+    nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+    button.nav{background:rgba(255,255,255,0.18);border:0;padding:10px 14px;border-radius:10px;color:#fff;cursor:pointer;font-size:14px}
+    h1{margin:6px 0 12px;font-size:22px}
+    h2{color:var(--accent)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    label{display:block;margin:8px 0 4px;font-weight:600}
+    input,textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid #e3d8ee;background:#fbf9fd;font-size:15px}
+    .btn{background:var(--accent);color:#fff;border:0;border-radius:14px;padding:10px 16px;font-weight:600;cursor:pointer;transition:.15s;box-shadow:0 8px 18px rgba(0,0,0,.15)}
+.btn:hover{transform:translateY(-1px)}
+    .muted{color:var(--muted);font-size:14px}
+    .card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 14px 30px rgba(15,23,42,.08)}
+    .hero{display:grid;grid-template-columns:1.3fr 1fr;gap:22px;align-items:center;background:linear-gradient(135deg,#ffffff,#e9f3f2);border-radius:26px;padding:26px;box-shadow:0 18px 36px rgba(15,23,42,.12)}
+.hero h2{font-size:30px;margin:0;color:var(--accent)}
+.hero .btn{background:var(--accent)}
+.hero h2{font-size:28px;margin:0;color:var(--accent)}
+.hero ul{padding-left:18px}
+.hero .btn{box-shadow:0 8px 18px rgba(0,0,0,0.15)}
+    .hero img{width:100%;border-radius:16px}
+    .banner{background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:16px;padding:18px;color:#fff}
+    .qr-canvas{display:flex;flex-direction:column;align-items:center;gap:10px;background:#ffffff;border:2px dashed #cbb2e6;padding:12px;border-radius:14px}
+    footer{margin-top:12px;padding:14px;text-align:center;color:#777;font-size:13px}
+    @media(max-width:900px){.grid,.hero{grid-template-columns:1fr}}
+    @media(max-width:600px){header h1{font-size:18px}.container{margin:8px;padding:12px;border-radius:16px}button.nav{flex:1}input,textarea,select{font-size:16px}.btn{width:100%;padding:14px}footer{font-size:12px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:auto">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#0b1020"><img src="QRP.jpeg" alt="VitalQR Logo" style="width: 50px;px;height:50px;object-fit:contain"></div>
+        <div>
+          <strong style="font-size:18px">VitalQR</strong>
+          <div style="font-size:12px;opacity:.9">Protección inmediata</div>
+        </div>
+      </div>
+      <nav>
+        <button class="nav" onclick="show('home')">Inicio</button>
+        <button class="nav" onclick="guarded('register')">Registrar perfiles</button>
+        <button class="nav" onclick="guarded('generate')">QR</button>
+        <button class="nav" onclick="guarded('panel')">Panel</button>
+        <button class="nav" onclick="show('public')">Emergencia</button>
+        <button class="nav" id="authBtn" onclick="show('auth')">Iniciar sesión</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section id="auth" class="view" style="display:none">
+      <div style="max-width:900px;margin:auto;padding:26px;background:linear-gradient(135deg,#1f3a5f,#3fa9a4);border-radius:30px;box-shadow:0 18px 40px rgba(0,0,0,.25)">
+        <h2 style="color:#fff;text-align:center;margin-top:0">Acceso del cuidador</h2>
+        <p style="color:rgba(255,255,255,0.92);text-align:center">Crea tu cuenta o inicia sesión para gestionar perfiles de pacientes.</p>
+        <div class="grid" style="margin-top:18px">
+          <div class="card" style="background:#ffffff">
+            <h3 style="color:#1f3a5f">Iniciar sesión</h3>
+            <label>Correo</label>
+            <input id="login_email" placeholder="correo@gmail.com">
+            <label>Contraseña</label>
+            <input id="login_pass" type="password" placeholder="••••••">
+            <div style="margin-top:14px"><button class="btn" style="width:100%" onclick="login()">Entrar</button></div>
+            <p id="login_msg" class="muted" style="margin-top:10px"></p>
+          </div>
+          <div class="card" style="background:#f8fbff;border:2px solid #e6eef8">
+            <h3 style="color:#3fa9a4">Crear cuenta</h3>
+            <label>Correo</label>
+            <input id="reg_email" placeholder="correo@gmail.com">
+            <label>Contraseña</label>
+            <input id="reg_pass" type="password" placeholder="min. 6 caracteres">
+            <div style="margin-top:14px"><button class="btn" style="width:100%;background:#3fa9a4" onclick="registerUser()">Crear cuenta</button></div>
+            <p id="reg_msg" class="muted" style="margin-top:10px"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="home" class="view">
+      <div class="hero">
+        <div>
+          <span style="background:rgba(123,44,191,0.12);color:var(--accent);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600">Prototipo funcional</span>
+          <h2 style="margin-top:10px">Nadie debería enfrentar el Alzheimer solo</h2>
+          <p class="muted" style="font-size:16px">VitalQR permite identificar a personas mayores en segundos mediante un código QR que conecta directamente con su familia.</p>
+          <ul class="muted">
+            <li>Identificación inmediata</li>
+            <li>Acceso desde cualquier celular</li>
+            <li>Privacidad garantizada</li>
+          </ul>
+          <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn" onclick="show('register')">Registrar persona</button>
+            <button class="btn" style="background:#fff;color:var(--accent);border:2px solid var(--accent)" onclick="show('public')">Ver emergencia</button>
+          </div>
+        </div>
+        
+      </div>
+        </div>
+        
+      </div>
+
+      <div style="margin-top:28px">
+        <section style="padding:28px;border-radius:20px;background:linear-gradient(135deg,#5b167a,#7b2cbf);color:#fff;margin-bottom:22px">
+          <h3 style="margin-top:0;font-size:24px">Nuestra misión</h3>
+          <p style="max-width:700px">Brindar una solución tecnológica simple, accesible y segura que permita identificar rápidamente a personas mayores con Alzheimer u otras condiciones, conectándolas de inmediato con su familia ante cualquier emergencia.</p>
+        </section>
+
+        <section style="padding:28px;border-radius:20px;background:#f3ecfa;margin-bottom:22px">
+          <h3 style="color:var(--accent);font-size:24px">Cuidado y acompañamiento</h3>
+          <p class="muted" style="max-width:750px">VitalQR fortalece el vínculo entre las personas mayores y sus cuidadores, permitiendo una respuesta rápida, reduciendo tiempos de búsqueda y dando tranquilidad a las familias en todo momento.</p>
+        </section>
+
+        <section style="padding:28px;border-radius:20px;background:#ffffff;border:1px solid #eee">
+          <h3 style="color:var(--accent);font-size:24px">¿Cómo funciona?</h3>
+          <ol class="muted" style="max-width:750px">
+            <li>El cuidador registra a la persona en la web.</li>
+            <li>El sistema genera un código QR único.</li>
+            <li>El QR se coloca en una pulsera.</li>
+            <li>Cualquier persona puede escanearlo desde su celular.</li>
+            <li>Se muestra la vista pública con los datos esenciales.</li>
+          </ol>
+        </section>
+      </div>
+    </section>
+
+    <section id="register" class="view" style="display:none">
+      
+      <h2>Registrar persona protegida</h2>
+      <div class="grid">
+        <div>
+          <label for="name">Nombre completo</label>
+          <input id="name" placeholder="Ej. Juan Pérez">
+
+          <label for="age">Edad</label>
+          <input id="age" type="number" min="0" placeholder="Ej. 78">
+
+          <label for="emergency">Teléfono de emergencia</label>
+          <input id="emergency" placeholder="Ej. +51 9XXXXXXXX">
+
+          <label for="notes">Condición médica / notas</label>
+          <textarea id="notes" rows="3" placeholder="Alzheimer, diabetes, alergias..."></textarea>
+
+          <label for="group">Grupo sanguíneo (opcional)</label>
+          <input id="group" placeholder="Ej. O+">
+
+          <div style="margin-top:10px">
+            <button class="btn" onclick="saveProfile()">Guardar y generar ID</button>
+            <button style="margin-left:8px" onclick="resetForm()">Limpiar</button>
+          </div>
+          <p id="saved" class="muted" style="margin-top:8px;display:none">Perfil guardado. Ve a "Generar QR".</p>
+        </div>
+
+        <div>
+          <div class="card">
+            <h3>Perfiles guardados</h3>
+            <div id="profilesList" class="muted">(ninguno aún)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="generate" class="view" style="display:none">
+      <h2>Generar / Imprimir QR</h2>
+      <div class="grid">
+        <div>
+          <label for="selectProfile">Selecciona un perfil</label>
+          <select id="selectProfile"></select>
+
+          <div style="margin-top:12px" class="card qr-canvas">
+            <canvas id="qrcanvas" style="background:#fff;border-radius:10px"></canvas>
+            
+            <div id="qrInfo" class="muted"></div>
+            <div>
+              <button class="btn" onclick="downloadQR()">Descargar QR (PNG)</button>
+              <button style="margin-left:8px" onclick="printQR()">Imprimir</button>
+            </div>
+          </div>
+
+          <p class="muted" style="margin-top:10px">Nota: el prototipo usa almacenamiento local. En una versión real se generaría URL única en servidor.</p>
+        </div>
+
+        <div>
+          <div class="card">
+            <h3>Vincular a pulsera</h3>
+            <p class="muted">Simula la impresión del QR en una pulsera. Guarda el ID impreso en la pulsera para usarlo en el escaneo.</p>
+            <label for="printedId">ID impreso (copiar aquí para simular escaneo)</label>
+            <input id="printedId" placeholder="Ej. 169704...">
+            <div style="margin-top:8px">
+              <button class="btn" onclick="copyToPrinted()">Copiar ID seleccionado</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="public" class="view" style="display:none">
+      <h2>Vista pública de emergencia (simulación real de escaneo)</h2>
+      <div class="grid">
+        <div>
+          <label for="scanId">Ingresa ID (simula el escaneo del QR)</label>
+          <input id="scanId" placeholder="Pega aquí el ID de la pulsera">
+          <div style="margin-top:10px"><button class="btn" onclick="showPublic()">Ver información pública</button></div>
+
+          <div id="publicView" style="margin-top:16px;display:none" class="card">
+            
+            <h3 id="pv_name"></h3>
+            <p id="pv_med" class="muted"></p>
+            <div style="margin-top:8px">
+              <button class="btn" id="callBtn">Llamar al contacto</button>
+            </div>
+            <p class="muted" style="margin-top:8px">Solo información esencial mostrada para preservar privacidad.</p>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h3>Instrucciones rápidas</h3>
+            <ol>
+              <li>Escanea el QR con cualquier cámara o lector.</li>
+              <li>La web mostrará nombre, condición y botón para llamar.</li>
+              <li>Si no hay red, el QR puede contener número directamente impreso (opcional).</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel" class="view" style="display:none">
+      <h2>Panel del cuidador (editar perfil)</h2>
+      <div class="card">
+        <label for="editSelect">Seleccionar perfil</label>
+        <select id="editSelect"></select>
+        <div style="margin-top:10px">
+          <button class="btn" onclick="loadToEdit()">Cargar</button>
+          <button style="margin-left:8px" onclick="deleteProfile()">Eliminar perfil</button>
+        </div>
+        <div id="editForm" style="margin-top:12px;display:none">
+          <label>Nombre</label>
+          <input id="e_name">
+          <label>Teléfono emergencia</label>
+          <input id="e_emergency">
+          <label>Condición / notas</label>
+          <textarea id="e_notes" rows="3"></textarea>
+          <div style="margin-top:8px">
+            <button class="btn" onclick="saveEdit()">Guardar cambios</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    Prototipo web VitalQR — datos en localStorage.
+  </footer>
+
+  <!-- QR library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script>
+    // ====== AUTENTICACIÓN SIMPLE (PROTO) ======
+    function users(){return JSON.parse(localStorage.getItem('vital_users')||"{}")}  
+    function saveUsers(u){localStorage.setItem('vital_users',JSON.stringify(u))}
+    function setSession(email){localStorage.setItem('vital_session',email)}
+    function getSession(){return localStorage.getItem('vital_session')}
+    function clearSession(){localStorage.removeItem('vital_session')}
+
+    function updateAuthUI(){
+      const btn = document.getElementById('authBtn');
+      if(getSession()){
+        btn.textContent = 'Cerrar sesión';
+        btn.onclick = logout;
+      } else {
+        btn.textContent = 'Iniciar sesión';
+        btn.onclick = function(){show('auth')};
+      }
+    }
+
+    function registerUser(){
+      const email = id('reg_email').value.trim();
+      const pass = id('reg_pass').value.trim();
+      if(!email || !pass){id('reg_msg').textContent='Completa todos los campos';return}
+      if(pass.length < 6){id('reg_msg').textContent='Contraseña muy corta';return}
+      const u = users();
+      if(u[email]){id('reg_msg').textContent='Este correo ya existe';return}
+      u[email] = {email, pass};
+      saveUsers(u);
+      id('reg_msg').textContent='Cuenta creada con éxito. Ya puedes iniciar sesión.';
+    }
+
+    function login(){
+      const email = id('login_email').value.trim();
+      const pass = id('login_pass').value.trim();
+      const u = users();
+      if(!u[email] || u[email].pass !== pass){id('login_msg').textContent='Credenciales incorrectas';return}
+      setSession(email);
+      id('login_msg').textContent='Sesión iniciada correctamente';
+      updateAuthUI();
+      show('home');
+    }
+
+    function logout(){
+      clearSession();
+      updateAuthUI();
+      alert('Sesión cerrada');
+      show('home');
+    }
+
+    function guarded(view){
+      if(!getSession()){
+        alert('Debes iniciar sesión como cuidador para acceder');
+        show('auth');
+        return;
+      }
+      show(view);
+    }
+
+    // ====== UTILIDADES EXISTENTES ======
+    function id(x){return document.getElementById(x)}
+    function show(name){document.querySelectorAll('.view').forEach(v=>v.style.display='none');id(name).style.display='block'; if(name==='register') refreshProfiles(); if(name==='generate') populateSelect(); if(name==='panel') populateEdit(); }
+
+    // storage de perfiles por usuario
+    function loadProfiles(){const s=getSession(); if(!s) return {}; const all=JSON.parse(localStorage.getItem('vital_profiles')||"{}"); return all[s]||{}}
+    function saveProfiles(p){const s=getSession(); const all=JSON.parse(localStorage.getItem('vital_profiles')||"{}"); all[s]=p; localStorage.setItem('vital_profiles',JSON.stringify(all))}
+
+    function saveProfile(){const name=id('name').value.trim(); if(!name){alert('Ingresa un nombre');return}
+      const p=loadProfiles(); const key='id_'+Date.now(); p[key]={id:key,name:name,age:id('age').value,emergency:id('emergency').value,notes:id('notes').value,group:id('group').value,created:Date.now()}; saveProfiles(p); id('saved').style.display='block'; setTimeout(()=>id('saved').style.display='none',2500); resetForm(); refreshProfiles(); populateSelect(); populateEdit(); }
+    function resetForm(){['name','age','emergency','notes','group'].forEach(x=>id(x).value='')}
+
+    function refreshProfiles(){const p=loadProfiles(); const list=id('profilesList'); if(!list) return; if(Object.keys(p).length===0){list.textContent='(ninguno aún)';return} list.innerHTML=''; for(const k in p){const it=p[k]; const d=document.createElement('div'); d.textContent=`${it.name} — ID: ${it.id}`; list.appendChild(d);} }
+
+    // QR
+    let qr;
+    function populateSelect(){const p=loadProfiles(); const sel=id('selectProfile'); if(!sel) return; sel.innerHTML=''; const empty=new Option('(seleccione)',''); sel.appendChild(empty); for(const k in p){sel.appendChild(new Option(p[k].name,p[k].id)); }}
+    function copyToPrinted(){const sel=id('selectProfile'); if(!sel.value){alert('Selecciona un perfil primero');return} id('printedId').value=sel.value; alert('ID copiado para simular escaneo');}
+    function downloadQR(){const canvas=id('qrcanvas'); const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='vitalqr_'+(id('selectProfile').value||'qr')+'.png'; a.click(); }
+    function printQR(){const dataUrl=id('qrcanvas').toDataURL(); const w=window.open(''); w.document.write('<img src="'+dataUrl+'">'); w.print(); w.close(); }
+
+    id('selectProfile')?.addEventListener('change', function(){const idv=this.value; if(!idv){id('qrcanvas').getContext('2d').clearRect(0,0,300,300); id('qrInfo').textContent='Selecciona un perfil para generar el QR'; return} const p=loadProfiles()[idv]; const qrText = location.origin + location.pathname + '?scan=' + encodeURIComponent(p.id);
+      if(!qr) qr = new QRious({element: id('qrcanvas'),size:200,value:qrText}); else {qr.set({value:qrText})}
+      id('qrInfo').textContent='QR generado. ID: '+p.id; });
+
+    function showPublic(){const val=id('scanId').value.trim()||id('printedId').value.trim(); if(!val){alert('Ingresa un ID');return} const p=loadProfiles()[val] || Object.values(loadProfiles()).find(x=>x.id===val); if(!p){alert('ID no encontrado');return} id('publicView').style.display='block'; id('pv_name').textContent=p.name; id('pv_med').textContent=(p.notes?('Condición: '+p.notes):'Sin información médica registrada'); id('callBtn').onclick=function(){ if(p.emergency) location.href='tel:'+p.emergency; else alert('No hay teléfono registrado'); } }
+
+    function populateEdit(){const p=loadProfiles(); const sel=id('editSelect'); if(!sel) return; sel.innerHTML=''; const empty=new Option('(seleccione)',''); sel.appendChild(empty); for(const k in p) sel.appendChild(new Option(p[k].name,p[k].id)); }
+    function loadToEdit(){const v=id('editSelect').value; if(!v){alert('Selecciona un perfil');return} const p=loadProfiles()[v]; id('editForm').style.display='block'; id('e_name').value=p.name; id('e_emergency').value=p.emergency; id('e_notes').value=p.notes; id('editForm').dataset.cur=v; }
+    function saveEdit(){const cur=id('editForm').dataset.cur; if(!cur) return; const p=loadProfiles(); p[cur].name=id('e_name').value; p[cur].emergency=id('e_emergency').value; p[cur].notes=id('e_notes').value; saveProfiles(p); alert('Cambios guardados'); refreshProfiles(); populateSelect(); populateEdit(); }
+    function deleteProfile(){const v=id('editSelect').value; if(!v){alert('Selecciona un perfil');return} if(!confirm('Eliminar perfil?'))return; const p=loadProfiles(); delete p[v]; saveProfiles(p); alert('Perfil eliminado'); refreshProfiles(); populateSelect(); populateEdit(); id('editForm').style.display='none'; }
+
+    (function(){const params=new URLSearchParams(location.search); if(params.has('scan')){ const sid=params.get('scan'); show('public'); id('scanId').value=sid; showPublic(); } updateAuthUI(); refreshProfiles(); })();
+  </script>
